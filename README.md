@@ -417,7 +417,9 @@ async function removeItemFromWishlist(productId) {
 }
 ```
 
-[![alt congrats gif]](https://media.giphy.com/media/ely3apij36BJhoZ234/giphy.gif)
+# Congragulations!
+if you got to here then you have a fully functional wishlist in your website!
+
 
 
 ## additional info
