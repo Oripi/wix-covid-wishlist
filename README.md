@@ -53,17 +53,75 @@ $w.onReady(function () {
 ```
 let's modify it by adding an `onClick` event for the button.
 ```javascript
-$w.onReady(async function () {
+$w.onReady(function () {
 	$w('#AddToWishlistButton').onClick(onWishlistClicked);
 });
 ```
-you should see an error in the console, that's because we also need to change the Id of the button so we'll be able to find it.
+you should see an error in the console, that's because we also need to change the Id of the button so we'll be able to find it and we also need to create a handler for the click.
 in the editor right click on the button and select `View properties`. in the window that pops up rename the Id to `AddToWishlistButton`.
 ![alt wishlist popup](images/changeId.png)
 
+and let's also create a function that will handle the click event below the `$w.onReady(...)` call.
+```javascript
+function onWishlistClicked() {
+  console.log('hello world');
+}
+```
+now if you preview the website you should be able to see the `"hello world"` in the console.
 
+In order to insert a new item in the database we need to expose a method from the `backend` that will `client` will invoke and as a result a new item will be added to the Wishlist collection.
+In the sidebar, click the `+` when hovering over `backend` or expand it and click on `Add a new web module`. name the module `wishlist.jsw` and open it.
+
+inside it add the following code:
+```javascript
+// Import the wix-users module for working with users.
+import wixUsers from 'wix-users-backend';
+// Import the wix-data module for working with queries.
+import wixData from 'wix-data';
+
+const collectionName = 'Wishlist';
+
+export function insertWishlistItem(product) {
+	// get the current user
+	const user = wixUsers.currentUser;
+
+	// check if user is a logged in member
+	if (!user.loggedIn) {
+		// if not return an indication that a user is not a member
+		return false;
+	}
+	
+	// otherwise insert a new entry to the collection
+	return wixData.insert(collectionName, {
+		// note the keys are the same as the ID of the column in the collection
+		productId: product._id,
+		addedDate: new Date(),
+		userId: user.id
+	});
+}
+```
+we've done a couple of things here. first we imported 2 modules: `wix-users-backend, wix-data`, the first is used to handle user status and in our case to check if the current user is a member or not (since only members should be able to update the table). the second is to manipulate collection data and in the above code, to add a new entry to the collection.
+
+Now we need to call this code from the client, so let's do just that.
+back in the product page let's replace the `onClick` handler with the following code:
+```javascript
+async function onWishlistClicked() {
+	// get the current product in the product page
+	const product = await $w('#productPage1').getProduct();
+	// call the backend function to add the item
+	await insertWishlistItem(product);
+}
+```
+and add the following import at the top:
+```javascript
+import { insertWishlistItem } from 'backend/wishlist.jsw';
+```
+> Note: make sure that the product component Id is `productPage1` or change it to yours.
+now when we click on the button a new item should be added to the collection. you can verify this by previewing the page, clicking the button and then go back to the collection and see if it's added.
 
 
 
 ## additional info
-you can find a working example site [here](https://oripi3.wixsite.com/wishlisttest/wishlist):
+you can find a working example site [here](https://oripi3.wixsite.com/wishlisttest/wishlist).
+
+a link to corvid api can be found [here](https://www.wix.com/corvid/reference).
