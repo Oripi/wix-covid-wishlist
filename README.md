@@ -224,6 +224,50 @@ $w.onReady(async function () {
 });
 ```
 
+### Bonus
+If you added the popup before then here's the code to show it when the user adds an item to the Wishlist:
+```javascript
+async function onWishlistClicked() {
+	// if user is not logged in, prompt him to login
+	if (!wixUsers.currentUser.loggedIn) {
+		await wixUsers.promptLogin();
+		return;
+	}
+	
+	// get the current product in the product page
+	const product = await $w('#productPage1').getProduct();
+	// if item is already in list, the click should remove it and show the add button
+	if (await isProductInWishlist()) {
+		await removeWishlistItem(product._id);
+		showAddToWishlistButton();
+	} else {
+		// otherwise add the product to the wishlist and show the remove button
+		await insertWishlistItem(product);
+		
+		$w('#insertWishlistNotif').show('fold');
+		setTimeout(function () {
+			$w('#insertWishlistNotif').hide('fade');
+		}, 3000);
+		
+		showRemoveFromWishlistButton();
+	}
+}
+```
+the `show` and `hide` functions do... exactly what you expect, they show and hide the element and the extra parameter is the animation used to show and hide the element (the full list can be found in the documentation). we also added some code to hide it after 3 seconds so it won't just hang there...
+> Note: make sure you use the correct Id for the popup.
+
+
+### Time to build the Wishlist!
+so far we only created the functionality to add and remove items from the list but we still can't see it.
+For that we need to create a new page that will show the Wishlist itself.
+So, add a new page named "Wishlist" and inside it add a new item from the `Lists & Grids` section. that will be our `repeater` and we'll use that to show the Wishlist.
+
+update the Ids in the repeater so we'll be able to use them later on.
+here's are the Ids in my repeater (writtend in red):
+![alt repeater ids](images/repeaterIds.png)
+
+
+
 ## additional info
 you can find a working example site [here](https://oripi3.wixsite.com/wishlisttest/wishlist).
 
