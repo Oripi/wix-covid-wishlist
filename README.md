@@ -22,6 +22,7 @@ next, let's go to "Product Page" and create an `Add to wishlist` button.
 if you wanna be really fancy you can also add a popup that will show once an item has been added to wishlist:
 ![alt wishlist popup](images/addToWishlistPopup.png)
 we'll manipulate it later to show and hide with animations.
+make sure to hide it on page load (can be done through the properties window).
 
 
 we're going to need a database to store our Wishlist data, so let's create one.
@@ -116,10 +117,112 @@ and add the following import at the top:
 ```javascript
 import { insertWishlistItem } from 'backend/wishlist.jsw';
 ```
-> Note: make sure that the product component Id is `productPage1` or change it to yours.
+> Notes: 
+> * make sure that the product component Id is `productPage1` or change it to yours.
 now when we click on the button a new item should be added to the collection. you can verify this by previewing the page, clicking the button and then go back to the collection and see if it's added.
+> * we can also insert to a collection directly from the client side without using a backend code, however this means exposing the userId in the client side and don't want to do that...
 
+But what about the case when our user isn't a member and he clicks the Wishlist button?
+well we can prompt him to sign up instead! let's add the code that does that:
+```javascript
+async function onWishlistClicked() {
+	// if user is not logged in, prompt him to login
+	if (!wixUsers.currentUser.loggedIn) {
+		await wixUsers.promptLogin();
+		return;
+	}
+	
+	// get the current product in the product page
+	const product = await $w('#productPage1').getProduct();
+	// call the backend function to add the item
+	await insertWishlistItem(product);
+}
+```
+and add the following import at the top:
+```javascript
+import wixUsers from 'wix-users';
+```
 
+We don't want the user to insert the same product multiple times to the Wishlist and we haven't added an option to remove it. we can solve both issues at the same time by coverting the `Add to Wishlist` button to a toggle button that will add or remove an item as necessary.
+
+In order to do that we need 2 new functions in the `backend` that will handle these calls.
+Let's add them:
+```javascript
+export function getItemInWishlist(productId) {
+	const user = wixUsers.currentUser;
+	// search the collection for item with the same userId and the given productId
+	return wixData.query(collectionName)
+	  .eq('userId', user.id)
+	  .eq('productId', productId)
+	  .find();
+}
+
+export async function removeWishlistItem(productId) {
+	const user = wixUsers.currentUser;
+
+	// if user is not a member, don't remove anything
+	if (!user.loggedIn) {
+		return false;
+	}
+	const data = await getItemInWishlist(productId);
+	return wixData.remove(collectionName, data.items[0]._id);
+}
+```
+and now in the client we need to add the logic for the toggle button.
+Again, let's extend the handler function:
+```javascript
+async function onWishlistClicked() {
+	// if user is not logged in, prompt him to login
+	if (!wixUsers.currentUser.loggedIn) {
+		await wixUsers.promptLogin();
+		return;
+	}
+	
+	// get the current product in the product page
+	const product = await $w('#productPage1').getProduct();
+	// if item is already in list, the click should remove it and show the add button
+	if (await isProductInWishlist()) {
+		await removeWishlistItem(product._id);
+		showAddToWishlistButton();
+	} else {
+		// otherwise add the product to the wishlist and show the remove button
+		await insertWishlistItem(product);
+		showRemoveFromWishlistButton();
+	}
+}
+```
+and add these functions at the bottom:
+```javascript
+async function isProductInWishlist() {
+	const product = await $w('#productPage1').getProduct();
+	const data = await getItemInWishlist(product._id);
+	// if there are no item in array result then it's not in the wish list
+	return data.items.length > 0;
+}
+
+function showAddToWishlistButton() {
+	$w('#AddToWishlistButton').label = 'Add to wishlist!';
+}
+
+function showRemoveFromWishlistButton() {
+	$w('#AddToWishlistButton').label = 'Remove from wishlist';
+}
+```
+and these imports at the top:
+```javascript
+import { insertWishlistItem, getItemInWishlist, removeWishlistItem } from 'backend/wishlist.jsw';
+```
+we also need to update the `$w.onReady(...)` to reflect the initial state:
+```javascript
+$w.onReady(async function () {
+	$w('#AddToWishlistButton').onClick(onWishlistClicked);
+	if (await isProductInWishlist()) {
+		showRemoveFromWishlistButton();
+	} else {
+		showAddToWishlistButton();
+	}
+});
+```
 
 ## additional info
 you can find a working example site [here](https://oripi3.wixsite.com/wishlisttest/wishlist).
