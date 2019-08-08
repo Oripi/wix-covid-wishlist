@@ -23,3 +23,47 @@ if you wanna be really fancy you can also add a popup that will show once an ite
 ![alt wishlist popup](images/addToWishlistPopup.png)
 we'll manipulate it later to show and hide with animations.
 
+
+we're going to need a database to store our Wishlist data, so let's create one.
+in the sidebar under `Database` click the `Add a new collection` link and select the `start from scratch` option.
+name the collection `Wishlist` and in permissions select `Member-generated content` so only members will be able to add and remove items from Wishlists.
+> after creating the database save the site and refresh the page in order to see native collections, such as `Products` table.
+
+now we're going to need to add columns to the table to store the `UserId, Product, AddedDate` and any other column that you want your users to fill that can be used later on.
+> Do not modify the id of the column, since we'll use it later to query and display the data. for example for `UserId` the Id of the column should be `userId`.
+
+when creating the columns create them with the following types:
+* UserId - Text
+* Product - reference column that is referenced to the products table
+* AddedDate - Date and Time
+in case you made a mistake in the column creation you can edit it via the settings of the column. You may get a warning message, but that's ok because we haven't used the table yet.
+
+Finally it's time to write some code!
+
+open up the dev console:
+![alt wishlist popup](images/devConsole.png)
+you should see the default code:
+```javascript
+// For full API documentation, including code examples, visit http://wix.to/94BuAAs
+
+$w.onReady(function () {
+	//TODO: write your page related code here...
+
+});
+```
+let's modify it by adding an `onClick` event for the button.
+```javascript
+$w.onReady(async function () {
+	$w('#AddToWishlistButton').onClick(onWishlistClicked);
+});
+```
+you should see an error in the console, that's because we also need to change the Id of the button so we'll be able to find it.
+in the editor right click on the button and select `View properties`. in the window that pops up rename the Id to `AddToWishlistButton`.
+![alt wishlist popup](images/changeId.png)
+
+
+
+
+
+## additional info
+you can find a working example site [here](https://oripi3.wixsite.com/wishlisttest/wishlist):
