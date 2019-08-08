@@ -41,7 +41,7 @@ in case you made a mistake in the column creation you can edit it via the settin
 
 Finally it's time to write some code!
 
-open up the dev console:
+open up the dev console by clicking on it in the lower part of the page:
 ![alt wishlist popup](images/devConsole.png)
 you should see the default code:
 ```javascript
