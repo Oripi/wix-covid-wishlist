@@ -52,6 +52,9 @@ $w.onReady(function () {
 
 });
 ```
+
+this function is called when the page is ready and elements are loaded into the page. If we try to access elements outside this function before the page load they won't work, so it's important that we do it here.
+
 let's modify it by adding an `onClick` event for the button.
 ```javascript
 $w.onReady(function () {
@@ -95,13 +98,14 @@ export function insertWishlistItem(product) {
 	// otherwise insert a new entry to the collection
 	return wixData.insert(collectionName, {
 		// note the keys are the same as the ID of the column in the collection
-		productId: product._id,
+		product: product._id,
 		addedDate: new Date(),
 		userId: user.id
 	});
 }
 ```
 we've done a couple of things here. first we imported 2 modules: `wix-users-backend, wix-data`, the first is used to handle user status and in our case to check if the current user is a member or not (since only members should be able to update the table). the second is to manipulate collection data and in the above code, to add a new entry to the collection.
+> Note that although product is a reference column and you may see the name of the product in the collection view page it is actually referenced by an id, in this case the `_id` field of the product. this is the same case when we are querying the data, as you'll see soon.
 
 Now we need to call this code from the client, so let's do just that.
 back in the product page let's replace the `onClick` handler with the following code:
@@ -153,7 +157,8 @@ export function getItemInWishlist(productId) {
 	// search the collection for item with the same userId and the given productId
 	return wixData.query(collectionName)
 	  .eq('userId', user.id)
-	  .eq('productId', productId)
+	  // note that the query is done by Id for the reference column
+	  .eq('product', productId)
 	  .find();
 }
 
@@ -165,6 +170,10 @@ export async function removeWishlistItem(productId) {
 		return false;
 	}
 	const data = await getItemInWishlist(productId);
+	
+	if (data.items.length === 0) {
+		return false;
+	}
 	return wixData.remove(collectionName, data.items[0]._id);
 }
 ```
@@ -263,8 +272,150 @@ For that we need to create a new page that will show the Wishlist itself.
 So, add a new page named "Wishlist" and inside it add a new item from the `Lists & Grids` section. that will be our `repeater` and we'll use that to show the Wishlist.
 
 update the Ids in the repeater so we'll be able to use them later on.
-here's are the Ids in my repeater (writtend in red):
+here's how my repeater looks like with the Ids I chose (writtend in red and `wishlistRepeater` as the Id of the repeater):
 ![alt repeater ids](images/repeaterIds.png)
+
+first we need a way to get the items. We can do that by adding another function to our `backend` file.
+```javascript
+export async function getWishlistItems() {
+	const user = wixUsers.currentUser;
+	
+	// if this is not a member don't return any items
+	if (!user.loggedIn) {
+		return [];
+	}
+	return await wixData.query(collectionName)
+		.eq('userId', user.id)
+		// this will add the referenced product to the result
+		.include('product')
+		.find();
+}
+```
+
+next, let's add a `loadWishlist` function on page load.
+```javascript
+// import backend functions
+import { getWishlistItems, removeWishlistItem } from 'backend/wishlist';
+// import the wix-location module for navigating to pages. we'll use that in a moment
+import wixLocation from 'wix-location';
+
+$w.onReady(function () {
+	// hide repeater in case it has any previous unwanted items
+	$w('#wishlistRepeater').hide();
+	loadWishlist();
+});
+
+async function loadWishlist() {
+	const data = await getWishlistItems();
+
+	const repeater = $w('#wishlistRepeater');
+	
+	// assign items to repeater
+	repeater.data = data.items;
+	
+	// set the handler that binds data for each item
+	repeater.onItemReady(onWishlistItemReady);
+	repeater.show();
+}
+```
+as you can see we get the items from the `backend` and set them as the data for the grid. but we're still missing the function that binds the data to each row item. we'll do that right now.
+```javascript
+function onWishlistItemReady($item, wishlistItem) {
+	// the referenced product is in the wishlist item since we included it in query
+	const product = wishlistItem.product;
+	
+	// set the image src to the product's image
+	$item('#wishlistImage').src = product.mainMedia;
+	
+	// let's add a click event to navigate to the product page when clicking on image
+	$item('#wishlistImage').onClick(() => {
+		// this is using wixLocation module to Navigate to the item's product page
+		wixLocation.to(product.productPageUrl);
+	});
+	$item('#wishlistProductName').text = product.name;
+	$item('#wishlistDescription').text = product.description;
+	
+	// here we're converting the 'added date' to a readable format
+	$item('#wishlistAddedDate').text = wishlistItem.addedDate.toLocaleString();
+	
+	// if item is not in stock we shouldn't enable the button (assuming it's disabled by default)
+	if (product.inStock) {
+		$item('#wishlistAddToCart').enable();
+		
+		// for products that have variants we need to send the user to product page to select one
+		// otherwise we can immediately add item to cart		
+		const hasVariants = !isObjectEmpty(product.productOptions)
+		
+		if (hasVariants) {
+			// set the button text to explain action
+			$item('#wishlistAddToCart').label = 'Select variants';
+			
+			// set the navigation to the product page
+			$item('#wishlistAddToCart').onClick(() => {
+				// Navigate to the wishlist item's product page.
+				wixLocation.to(product.productPageUrl);
+			});
+		} else {
+			// otherwise we can add it to cart
+			$item('#wishlistAddToCart').label = 'Add to cart';
+			$item('#wishlistAddToCart').onClick(async () => {
+				// in order to add to cart we have to use the cart icon
+				// in case you don't want to show one in this page you can add an icon and hide it
+				await $item('#shoppingCartIcon1').addToCart(product._id);
+			});
+		}
+	}
+}
+
+// checks if object has any keys
+function isObjectEmpty(obj) {
+	return Object.entries(obj).length === 0 && obj.constructor === Object;
+}
+```
+the `$item` is the element in the list that corresponds to the given `wishlistItem`, so we can use that to select any  previously defined sub-elements by the Ids we gave them and bind the data as we see fit.
+
+now we're just missing the option to remove an item from the wishlist. let's implement that:
+```javascript
+function onWishlistItemReady($item, wishlistItem) {
+	// same implementation as before
+	//...
+	
+	// here we're converting the 'added date' to a readable format
+	$item('#wishlistAddedDate').text = wishlistItem.addedDate.toLocaleString();
+	
+	// ------------ ADDED THESE LINES -------------------
+	$item('#wishlistRemoveButton').onClick(async () => {
+		await removeItemFromWishlist(product._id);
+	});
+	// ------------ END -------------------
+	
+	// if item is not in stock we shouldn't enable the button (assuming it's disabled by default)
+	if (product.inStock) {
+		// nothing changed here
+		// ...
+		} else {
+			// otherwise we can add it to cart
+			$item('#wishlistAddToCart').label = 'Add to cart';
+			$item('#wishlistAddToCart').onClick(async () => {
+				// in order to add to cart we have to use the cart icon
+				// in case you don't want to show one in this page you can add an icon and hide it
+				await $item('#shoppingCartIcon1').addToCart(product._id);
+				// ------------ ADDED THESE LINES -------------------
+				await removeItemFromWishlist(product._id);
+				// ------------ END -------------------
+			});
+		}
+	}
+}
+
+async function removeItemFromWishlist(productId) {
+	// use the same backend call from before to remove the item
+	await removeWishlistItem(productId);
+	
+	// load the list again after the item was removed
+	await loadWishlist();
+}
+```
 
 
 
