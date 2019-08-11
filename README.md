@@ -420,7 +420,132 @@ async function removeItemFromWishlist(productId) {
 # Congragulations!
 if you got to here then you have a fully functional wishlist in your website!
 
+# Something Extra
+So we have a fully functioning Wishlist, but I bet that with a little more effort we can improve it by a lot!
 
+First things first, let's add some indications to a non-member user when he navigates to the Wishlist.
+![alt repeater ids](images/wishlistUserNotMember.png)
+> Note that we're hiding it by default. we'll show it only if the user is not a member.
+To do that we can add a condition for user membership in the `loadWishlist` function:
+```javascript
+async function loadWishlist() {
+	// ------------ ADDED THESE LINES -------------------
+	// check if user is a member
+	const isLoggedIn = await isUserLoggedIn();
+	if (!isLoggedIn) {
+		$w('#wishlistNotLoggedIn').show();
+		return;
+	}
+	// ------------ END -------------------
+	// otherwise display the list just like before
+	const data = await getWishlistItems();
+
+	const repeater = $w('#wishlistRepeater');
+	
+	// assign items to repeater
+	repeater.data = data.items;
+	
+	// set the handler that binds data for each item
+	repeater.onItemReady(onWishlistItemReady);
+	repeater.show();
+}
+```
+That's already a nice edition to our website instead of showing some empty page.
+
+How about the case when the user doesn't have anything in the Wishlist? let's add a text for that too!
+![alt repeater ids](images/wishlistNoItems.png)
+As you can see in the image I've added another text in the same location as the member's text and i'm using the layers of the editor to select it and modify it (you can also use the layers functionality to show and hide other items so you can focus only on the parts that you need right now).
+
+And just like before let's add the code that shows/hides the text when we want:
+```javascript
+async function loadWishlist() {
+	// check if user is a member
+	const isLoggedIn = await isUserLoggedIn();
+	if (!isLoggedIn) {
+		$w('#wishlistNotLoggedIn').show();
+		return;
+	}
+	
+	// otherwise display the list just like before
+	const data = await getWishlistItems();
+
+	const repeater = $w('#wishlistRepeater');
+	// ------------ ADDED THESE LINES -------------------
+	if (data.items.length === 0) {
+		repeater.hide();
+		$w('#wishlistNoItemsText').show();
+		return;
+	}
+	// ------------ END -------------------
+	
+	// assign items to repeater
+	repeater.data = data.items;
+	
+	// set the handler that binds data for each item
+	repeater.onItemReady(onWishlistItemReady);
+	repeater.show();
+}
+```
+And now the user won't see a blank page when he has nothing in his Wishlist.
+
+So we tweaked some thing to make our site more attractive to users but we haven't seen something new yet and this is the **EXTRA** part after all...
+
+And that's why I want to show you how to create a custom page in your dashboard to show you which products your customers want the most! this could give you a real advantage is managing your online store.
+
+Let's get right to it, in the editor go to the "add a new page" section and select `Dashboard Page`:
+![alt repeater ids](images/addDashboardPage.png)
+
+I named mine `Most Wished for products` so I could easily find it in the dashboard section.
+You can navigate to the page through the pages menu:
+![alt repeater ids](images/navigateToDashboard.png)
+
+What we're going to do is add another repeater like before, only this time we're going to do 2 new things:
+1. create a more complex query to select all products that users wanted and count how many users added them to their wishlist.
+2. use an external javascript library called `lodash` (a common utility library with many useful functions).
+
+Let's get the library first so we could use it later. to install a library (also called a package) click on the `node_modules` section in the sidebar and then on the `Install a new package` link:
+![alt repeater ids](images/installLodash.png)
+
+that's it for the package! we'll see how to use it soon.
+Now we need to create a query to get the data that we want. We already know by now that the right place to put queries is in the `backend` section and we can add a function in our already existing file:
+```javascript
+// previously defined imports
+// ...
+
+// lodash package import
+// note that's it's also possible to import like this: "import leDash from 'lodash'" 
+// but conventions make us more professional :)
+import _ from 'lodash';
+
+// previously defined functions
+// ...
+
+export async function getMostWishedForItems() {
+	// we're using wixData "aggregate" to group items
+	const countedItemsPromise = wixData.aggregate(collectionName)
+		// we want to group our data by products
+		.group('product')
+		// and count them
+		.count()
+		// and then run the query
+		.run();
+		
+	// the Promise.all(...) receives an array of Promises and returns an array of resolved promises
+	// this allows us to run the promises in parallel instead of one by one
+	const result = await Promise.all([countedItemsPromise, getWishlistItems()]);
+	
+	// the counted items 
+	const countedItems = result[0];
+	const wishlistItems = result[1];
+	const products = wishlistItems.items.map(item => item.productId);
+
+	// all lodash functions are available through our imported "_" variable
+	// lodash documentation can be found here: https://lodash.com/docs/4.17.15
+	var merged = _.merge(_.keyBy(products, '_id'), _.keyBy(countedItems._items, '_id'));
+	var values = _.values(merged);
+	return { items: values };
+}
+```
 
 ## additional info
 you can find a working example site [here](https://oripi3.wixsite.com/wishlisttest/wishlist).
