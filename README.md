@@ -6,7 +6,7 @@ In this walkthrough we're going to create our very own Wishlist for a wix websit
 
 we'll learn how to:
 * Interact with page elements through Corvid.
-* Use some of the various libraries that Corvid exposes us to manipulate our website.
+* Use some of the various libraries that Corvid exposes to us for manipulating our website.
 * Create our own database table and use CRUD (Create, Read, Update, Delete) operations on it.
 
 # so let's get started!
@@ -22,7 +22,7 @@ next, let's go to "Product Page" and create an `Add to wishlist` button.
 if you wanna be really fancy you can also add a popup that will show once an item has been added to wishlist:
 ![alt wishlist popup](images/addToWishlistPopup.png)
 we'll manipulate it later to show and hide with animations.
-make sure to hide it on page load (can be done through the properties window).
+make sure to hide it on page load (this can be done by right clicking on the element, selecting the `View Properties` window from the menu and checking the `Hidden on Load` option).
 
 
 we're going to need a database to store our Wishlist data, so let's create one.
@@ -31,7 +31,7 @@ name the collection `Wishlist` and in permissions select `Member-generated conte
 > after creating the database save the site and refresh the page in order to see native collections, such as `Products` table.
 
 now we're going to need to add columns to the table to store the `UserId, Product, AddedDate` and any other column that you want your users to fill that can be used later on.
-> Do not modify the id of the column, since we'll use it later to query and display the data. for example for `UserId` the Id of the column should be `userId`.
+> Do not modify the `Field key` of the column, the `Field key` is generated automatically based on the `Field name` and we're going to use it later to query and display the data. for example the column `UserId` should have a `Field name` named `userId`.
 
 when creating the columns create them with the following types:
 * UserId - Text
@@ -62,7 +62,7 @@ $w.onReady(function () {
 });
 ```
 you should see an error in the console, that's because we also need to change the Id of the button so we'll be able to find it and we also need to create a handler for the click.
-in the editor right click on the button and select `View properties`. in the window that pops up rename the Id to `AddToWishlistButton`.
+in the editor right click on the button and select `View properties`. in the window that pops up rename the Id to `AddToWishlistButton` by clicking on it and typing it in the input.
 ![alt wishlist popup](images/changeId.png)
 
 and let's also create a function that will handle the click event below the `$w.onReady(...)` call.
@@ -73,7 +73,9 @@ function onWishlistClicked() {
 ```
 now if you preview the website you should be able to see the `"hello world"` in the console.
 
-In order to insert a new item in the database we need to expose a method from the `backend` that will `client` will invoke and as a result a new item will be added to the Wishlist collection.
+The `$w` and the `ID` field are very important parts in Corvid, In fact this is the way We can interact with elements as we've seen in the example above. those of you who are familiar with `jquery` will recognize the syntax straight away and for those who aren't, the `$w` is the object that allows us to get a reference to an element in the page based on the `ID` that we give him in the `ID` field using the syntax: `$w('#<ID>')`. e.g. for `ID: AddToWishlistButton` the call: `$w('#AddToWishlistButton')` will return a reference to the "add to wishlist" button.
+
+In order to insert a new item in the database we need to expose a method from the `backend` that the `client` will invoke and as a result a new item will be added to the Wishlist collection.
 In the sidebar, click the `+` when hovering over `backend` or expand it and click on `Add a new web module`. name the module `wishlist.jsw` and open it.
 
 inside it add the following code:
@@ -108,7 +110,11 @@ we've done a couple of things here. first we imported 2 modules: `wix-users-back
 > Note that although product is a reference column and you may see the name of the product in the collection view page it is actually referenced by an id, in this case the `_id` field of the product. this is the same case when we are querying the data, as you'll see soon.
 
 Now we need to call this code from the client, so let's do just that.
-back in the product page let's replace the `onClick` handler with the following code:
+add the following import at the top:
+```javascript
+import { insertWishlistItem } from 'backend/wishlist.jsw';
+```
+and back in the product page let's replace the `onClick` handler with the following code:
 ```javascript
 async function onWishlistClicked() {
 	// get the current product in the product page
@@ -117,14 +123,10 @@ async function onWishlistClicked() {
 	await insertWishlistItem(product);
 }
 ```
-and add the following import at the top:
-```javascript
-import { insertWishlistItem } from 'backend/wishlist.jsw';
-```
 > Notes: 
 > * make sure that the product component Id is `productPage1` or change it to yours.
 now when we click on the button a new item should be added to the collection. you can verify this by previewing the page, clicking the button and then go back to the collection and see if it's added.
-> * we can also insert to a collection directly from the client side without using a backend code, however this means exposing the userId in the client side and don't want to do that...
+> * we can also insert to a collection directly from the client side without using a backend code, however this means that we will need to pass the `userId` to the insert method as a parameter and as a result a user maybe be able to insert Wishlist items for other memebers and we don't want to enable that...
 
 But what about the case when our user isn't a member and he clicks the Wishlist button?
 well we can prompt him to sign up instead! let's add the code that does that:
@@ -418,7 +420,12 @@ async function removeItemFromWishlist(productId) {
 ```
 
 # Congragulations!
+![alt repeater ids](https://media.giphy.com/media/bKBM7H63PIykM/giphy.gif)
+
 if you got to here then you have a fully functional wishlist in your website!
+users should now be able to add and remove items from their Wishlist and as the site owner you can see the products in the collection and manage it as you see fit.
+
+If you want to see how you can take this further check out the next step.
 
 # Something Extra
 So we have a fully functioning Wishlist, but I bet that with a little more effort we can improve it by a lot!
@@ -530,6 +537,13 @@ export async function getMostWishedForItems() {
 		// and then run the query
 		.run();
 		
+	// this is similar to getting all the products for a single user
+	// but this time we're not filtering per user
+	const getAllWishlistProductsPromise = wixData
+		.query(collectionName)
+		.include('productId')
+		.find();
+		
 	// the Promise.all(...) receives an array of Promises and returns an array of resolved promises
 	// this allows us to run the promises in parallel instead of one by one
 	const result = await Promise.all([countedItemsPromise, getWishlistItems()]);
@@ -564,7 +578,7 @@ this process results in the list we need to show in our page, so we return an ob
 
 ![alt repeater ids](https://media.giphy.com/media/EDt1m8p5hqXG8/giphy.gif)
 
-Man that was long! but now we can finally use it our dashboard page.
+Man that was long! but now we can finally use it in our dashboard page.
 We can drop in a repeater from the `lists & grids` section and set up Ids just like we did in the Wishlist page.
 Here's mine for example:
 ![alt repeater ids](images/mostWishIds.png)
