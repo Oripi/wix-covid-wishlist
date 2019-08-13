@@ -6,7 +6,7 @@ In this walkthrough we're going to create our very own Wishlist for a wix websit
 
 we'll learn how to:
 * Interact with page elements through Corvid.
-* Use some of the various libraries that Corvid exposes us to manipulate our website.
+* Use some of the various libraries that Corvid exposes to us to manipulate our website.
 * Create our own database table and use CRUD (Create, Read, Update, Delete) operations on it.
 
 # so let's get started!
@@ -33,15 +33,15 @@ name the collection `Wishlist` and in permissions select `Member-generated conte
 now we're going to need to add columns to the table to store the `UserId, Product, AddedDate` and any other column that you want your users to fill that can be used later on.
 > Do not modify the id of the column, since we'll use it later to query and display the data. for example for `UserId` the Id of the column should be `userId`.
 
-when creating the columns create them with the following types:
+when creating the columns, set thier type as follows:
 * UserId - Text
-* Product - reference column that is referenced to the products table
+* Product - Reference - column that is referenced to the products table
 * AddedDate - Date and Time
 in case you made a mistake in the column creation you can edit it via the settings of the column. You may get a warning message, but that's ok because we haven't used the table yet.
 
 Finally it's time to write some code!
 
-open up the dev console by clicking on it in the lower part of the page:
+Select the Product Page andand open up the dev console by clicking on it in the lower part of the page:
 ![alt wishlist popup](images/devConsole.png)
 you should see the default code:
 ```javascript
@@ -73,7 +73,7 @@ function onWishlistClicked() {
 ```
 now if you preview the website you should be able to see the `"hello world"` in the console.
 
-In order to insert a new item in the database we need to expose a method from the `backend` that will `client` will invoke and as a result a new item will be added to the Wishlist collection.
+In order to insert a new item in the database we need to expose a method from the `backend` that the `client` will invoke and as a result a new item will be added to the Wishlist collection.
 In the sidebar, click the `+` when hovering over `backend` or expand it and click on `Add a new web module`. name the module `wishlist.jsw` and open it.
 
 inside it add the following code:
@@ -263,7 +263,7 @@ async function onWishlistClicked() {
 }
 ```
 the `show` and `hide` functions do... exactly what you expect, they show and hide the element and the extra parameter is the animation used to show and hide the element (the full list can be found in the documentation). we also added some code to hide it after 3 seconds so it won't just hang there...
-> Note: make sure you use the correct Id for the popup.
+> Note: make sure you are using the correct Id for the popup.
 
 
 ### Time to build the Wishlist!
