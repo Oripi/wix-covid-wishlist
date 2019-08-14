@@ -506,114 +506,99 @@ I named mine `Most Wished for products` so I could easily find it in the dashboa
 You can navigate to the page through the pages menu:
 ![alt repeater ids](images/navigateToDashboard.png)
 
-What we're going to do is add another repeater like before, only this time we're going to do 2 new things:
-1. create a more complex query to select all products that users wanted and count how many users added them to their wishlist.
-2. use an external javascript library called `lodash` (a common utility library with many useful functions).
+What we're going to do is add another repeater like before, only this time we're going to do a couple of new things:
+1. create an aggregation query to count how many users added a product them to their wishlists.
+2. bind the repeater to a dataset and use filter to show only the products that we want.
 
-Let's get the library first so we could use it later. to install a library (also called a package) click on the `node_modules` section in the sidebar and then on the `Install a new package` link:
-![alt repeater ids](images/installLodash.png)
+We can drop in a repeater from the `lists & grids` section and set up Ids just like we did in the Wishlist page and now instead of manually binding the columns in the data to the UI we're going to bind that data from a `dataset` object.
+first we need to create a `dataset` object:
+![alt repeater ids](images/createDataset.png)
 
-that's it for the package! we'll see how to use it soon.
-Now we need to create a query to get the data that we want. We already know by now that the right place to put queries is in the `backend` section and we can add a function in our already existing file:
+Select the `Products` collection and click `create`. now you should see a new `dataset` object on your screen:
+![alt repeater ids](images/datasetObject.png)
+
+This object will not be displayed in your website, it's only shown in the editor so you could manage it, so you can move it anywhere you want on the screen without affecting your website.
+Now that we have a `dataset` we can bind it's columns to elements in the UI. let's bind the name of the product to a text element. Select the text element you want to connect and click on the "connect to data" button, then select the "Stores/Products dataset" in the as the dataset to connect and in the "Text connects to" select the `Name` field.
+![alt repeater ids](images/connectText.png)
+
+Now if you try to preview the your website you should see that the repeater shows the products in your store with their corresponding names. you can connect the rest of the items in the repeater just like the text so they'll be displayed in the list.
+
+Meanwhile, i'll skip ahead to show you how to also display the amount of items (that's what we're here for after all!).
+we're going to need a query to get the data that we want. We already know by now that the right place to put queries is in the `backend` section and we can add a function in our already existing file:
 ```javascript
 // previously defined imports
 // ...
-
-// lodash package import
-// note that's it's also possible to import like this: "import leDash from 'lodash'" 
-// but conventions make us more professional :)
-import _ from 'lodash';
 
 // previously defined functions
 // ...
 
 export async function getMostWishedForItems() {
-	// we're using wixData "aggregate" to group items
-	const countedItemsPromise = wixData.aggregate(collectionName)
-		// we want to group our data by products
+	return wixData.aggregate(collectionName)
+		// we want to group the entries by the product column
 		.group('product')
 		// and count them
 		.count()
-		// and then run the query
 		.run();
-		
-	// this is similar to getting all the products for a single user
-	// but this time we're not filtering per user
-	const getAllWishlistProductsPromise = wixData
-		.query(collectionName)
-		.include('productId')
-		.find();
-		
-	// the Promise.all(...) receives an array of Promises and returns an array of resolved promises
-	// this allows us to run the promises in parallel instead of one by one
-	const result = await Promise.all([countedItemsPromise, getWishlistItems()]);
-	
-	// the counted items 
-	const countedItems = result[0];
-	const wishlistItems = result[1];
-	const products = wishlistItems.items.map(item => item.productId);
-
-	// all lodash functions are available through our imported "_" variable
-	// lodash documentation can be found here: https://lodash.com/docs/4.17.15
-	var merged = _.merge(_.keyBy(products, '_id'), _.keyBy(countedItems._items, '_id'));
-	var values = _.values(merged);
-	return { items: values };
 }
 ```
-let's take this step by step.
-first we use `wixData` to create an aggregate query - this type of query (as the name states) aggregates several result according to the fields given the the `group` clause, in our case the `product` field. We want to count the amount of products in wishlists so we'll use the `count` aggregation for that. at the end we use the `run` to create a `Promise` that will be resolved when the query is finished.
 
-The aggregation returns an array of items with the grouped by key and the count amount but not the details about the products themselves, which we need to show in our page. For that we also need to get the items and merge the two lists.
+`wixData` exposes an aggregate API to group items by the fields that we want in a collection. In this example we want to count the amount of products in all Wishlists so we group by the `product` column and simply count the occurences.
 
-we're using the `Promise.all(...)` to get both results and now we can merge them into a single list containing products where each has a counter field named `count`.
-
-Now comes the merging part. this may look confusing at first, but it's a little easier once we understand what each function does. As you can see we're using 3 functions from the `lodash` library: `merge, keyBy, values`, i'll explain them alongside their use in our code. let's talk about `keyBy` first, this function takes a list of objects and creates a single object composed keys generated by the second argument (in here it's the `_id` property of the object) and the value is a the list of items that matched that key. we're using this method for both lists so the merge function could merge by keys.
-
-the `merge` function takes a source object and a target(s) object and merges the objects by their keys, since both objects contain the exact values that we need in their corresponding keys, the merge puts the `count` property in the matching `product` for each of the products.
-
-last but not least, we need only the products with the counters, while we have a `{_id: productWithCountObj}`, so we create a list of only the values using the `values` method.
-
-this process results in the list we need to show in our page, so we return an object containing the list.
-> Note: we're returning an object instead of values due the way *Corvid* serializes object. trying to return an `array` from the backend to our client code will result in that array being serialized and to avoid that we're wrapping it in an object.
-
-![alt repeater ids](https://media.giphy.com/media/EDt1m8p5hqXG8/giphy.gif)
-
-Man that was long! but now we can finally use it in our dashboard page.
-We can drop in a repeater from the `lists & grids` section and set up Ids just like we did in the Wishlist page.
-Here's mine for example:
-![alt repeater ids](images/mostWishIds.png)
-
-and below is the code I used show the items. it's very similar to the Wishlist page code aside from the `count` property, that is the counter for the products.
+Moving back to our dashboard page, let's add the code that handles the binding to the "count" of the products:
 ```javascript
-// Import backend functions to get and remove list items
 import { getMostWishedForItems } from 'backend/wishlist';
-// Import the wix-location module for navigating to pages.
-import wixLocation from 'wix-location';
+
+
+let data;
 
 $w.onReady(function () {
 	loadWishlist();
 });
 
 function onWishlistItemReady($w, product) {
-	$w('#itemImage').src = product.mainMedia;
-	$w('#itemImage').onClick(() => {
-		// Navigate to the wishlist item's product page.
-		wixLocation.to(product.productPageUrl);
-	});
-	$w('#itemName').text = product.name;
-	$w('#itemDescription').text = product.description;
-	$w('#itemRequestedAmount').text = product.count.toString();
+	const matchingItem = data._items.find(item => item._id === product._id);
+	const itemCount = matchingItem ? matchingItem.count.toString() : '0';
+	$w('#itemRequestedAmount').text = itemCount;
 }
 
 async function loadWishlist() {
-	const data = await getMostWishedForItems();
-
+	data = await getMostWishedForItems();
 	const repeater = $w('#mostWishedForRepeater');
-	repeater.data = data.items;
 	repeater.onItemReady(onWishlistItemReady);
 }
 ```
-> Note: the `count` property is a `number` and we're converting it to a string, since `Texts` must be string.
+
+Let's analyze this code. first we're importing the `getMostWishedForItems` from the backend so we'll be able to retrieve the "count" of the products. next we're defining a `data` variable where we're going to store the result of that query so we'll be able to use it in `onWishlistItemReady` (we can't pass it directly, since the `onWishlistItemReady` is called for us when the item is ready and we can't pass the result of `getMostWishedForItems` to it).
+Just like before we're adding a handler function for `onItemReady`, since this method is called whenever the repeater needs to render an item it will also be called when the data from the `dataset` needs to be rendered.
+
+in the `onWishlistItemReady` we're searching the aggregated data for the product with the same id as the currently rendered item to get it's count amount. if we find an item then we show it's count value and in case we don't we'll just show 0.
+> Note: the aggregated result doesn't return products with `0` count, since it only aggregates on products that exist in the Wishlist table and `0` count means that no product was found in the Wishlist table.
+
+At this point we already have a working dashboard page that shows the count of products, but i'd like to do one more thing and that is to filter out the items that don't appear in any Wishlist (0 count items).
+
+To do that we need to add a `filter` to our `dataset`:
+```javascript
+// add wixData import to create filters
+import wixData from 'wix-data';
+
+async function loadWishlist() {
+	data = await getMostWishedForItems();
+	
+	// ------------ ADDED THESE LINES -------------------
+	// get the product ids from the aggregated result
+	const productIds = data._items.map(item => item._id);
+	
+	// add a filter to the dataset to filter items by the given product ids
+	$w('#dataset1').setFilter(wixData.filter().hasSome('_id', productIds));
+	// ------------ END -------------------
+		
+	const repeater = $w('#mostWishedForRepeater');
+	repeater.onItemReady(onWishlistItemReady);
+}
+```
+What we did here is add a filter to the `dataset` object that shows only products with `_id` that is present the array of ids (`productIds`) that we supplied it. The result is a Wishlist that displays only products that have a `count > 0`, just like we wanted!
+> Note: at this point we can replace this line of code: `const itemCount = matchingItem ? matchingItem.count.toString() : '0';` with this: `const itemCount = matchingItem.count.toString();` since there will always be a match (we made sure of that in the filter), but we can also just keep this as it is.
+> Note: the `count` property is a `number` and we're converting it to a string, since `Text` elements must recieve a string in their `text` property.
 
 That's it! hope you liked it and learned some new on the way :)
 
