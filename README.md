@@ -9,41 +9,42 @@ we'll learn how to:
 * Use some of the various libraries that Corvid exposes to us for manipulating our website.
 * Create our own database table and use CRUD (Create, Read, Update, Delete) operations on it.
 
-# so let's get started!
-the first thing we need is... a website! so let's start by creating a new website where we can try our code. since we're creating a Wishlist for an online store, select the "online-store" option when creating a new website. in case you created a different kind of website you can always enable it through the same menu that you add different elements to your website, just under the `store` section.
+# So let's get started!
+The first thing we need is... a website! so let's start by creating a new website where we can try our code. Since we're creating a Wishlist for an online store, select the "online-store" option when creating a new website. In case you created a different kind of website you can always enable it through the same menu that you add different elements to your website, just under the `store` section.
 
-now, let's enable Corvid so we'll be able to modify what we need:
+Now, let's enable Corvid so we'll be able to modify what we need:
 ![alt enable corvid](images/enableCorvid.png)
 
-next, let's go to "Product Page" and create an `Add to wishlist` button.
+Next, let's go to "Product Page" and create an `Add to wishlist` button.
 ![alt wishlist button](images/addToWishlistButton.png)
 
 ### Bonus:
-if you wanna be really fancy you can also add a popup that will show once an item has been added to wishlist:
+If you wanna be really fancy you can also add a popup that will show once an item has been added to wishlist:
 ![alt wishlist popup](images/addToWishlistPopup.png)
-we'll manipulate it later to show and hide with animations.
-make sure to hide it on page load (this can be done by right clicking on the element, selecting the `View Properties` window from the menu and checking the `Hidden on Load` option).
+
+We'll manipulate it later to show and hide with animations.
+Make sure to hide it on page load (this can be done by right clicking on the element, selecting the `View Properties` window from the menu and checking the `Hidden on Load` option).
 
 
-we're going to need a database to store our Wishlist data, so let's create one.
-in the sidebar under `Database` click the `Add a new collection` link and select the `start from scratch` option.
-name the collection `Wishlist` and in permissions select `Member-generated content` so only members will be able to add and remove items from Wishlists.
-> after creating the database save the site and refresh the page in order to see native collections, such as `Products` table.
+We're going to need a database to store our Wishlist data, so let's create one.
+In the sidebar under `Database` click the `Add a new collection` link and select the `start from scratch` option.
+Name the collection `Wishlist` and in permissions select `Member-generated content` so only members will be able to add and remove items from Wishlists.
+> After creating the database save the site and refresh the page in order to see native collections, such as `Products` table.
 
-now we're going to need to add columns to the table to store the `UserId, Product, AddedDate` and any other column that you want your users to fill that can be used later on.
+Now we're going to need to add columns to the table to store the `UserId, Product, AddedDate` and any other column that you want your users to fill that can be used later on.
 > Do not modify the `Field key` of the column, the `Field key` is generated automatically based on the `Field name` and we're going to use it later to query and display the data. for example the column `UserId` should have a `Field name` named `userId`.
 
-when creating the columns create them with the following types:
+When creating the columns, select following types:
 * UserId - Text
-* Product - reference column that is referenced to the products table
+* Product - Reference - with a reference to the products table (single reference)
 * AddedDate - Date and Time
-in case you made a mistake in the column creation you can edit it via the settings of the column. You may get a warning message, but that's ok because we haven't used the table yet.
+In case you made a mistake in the column creation you can edit it via the settings of the column. You may get a warning message, but that's ok because we haven't used the table yet.
 
 Finally it's time to write some code!
 
-open up the dev console by clicking on it in the lower part of the page:
+Select the Product page and open up the dev console by clicking on it in the lower part of the page:
 ![alt wishlist popup](images/devConsole.png)
-you should see the default code:
+You should see the default code:
 ```javascript
 // For full API documentation, including code examples, visit http://wix.to/94BuAAs
 
@@ -52,37 +53,36 @@ $w.onReady(function () {
 
 });
 ```
+This function is called when the page is ready and elements are loaded into the page. If we try to access elements outside this function before the page load they won't work, so it's important that we do it here.
 
-this function is called when the page is ready and elements are loaded into the page. If we try to access elements outside this function before the page load they won't work, so it's important that we do it here.
-
-let's modify it by adding an `onClick` event for the button.
+Let's modify it by adding an `onClick` event for the button.
 ```javascript
 $w.onReady(function () {
 	$w('#AddToWishlistButton').onClick(onWishlistClicked);
 });
 ```
-you should see an error in the console, that's because we also need to change the Id of the button so we'll be able to find it and we also need to create a handler for the click.
-in the editor right click on the button and select `View properties`. in the window that pops up rename the Id to `AddToWishlistButton` by clicking on it and typing it in the input.
+You should see an error in the console, that's because we also need to change the Id of the button to be able to find it and we also need to create a handler for the click.
+In the editor right click on the button and select `View properties`. In the window that pops up rename the Id to `AddToWishlistButton` by clicking on it and typing it in the input.
 ![alt wishlist popup](images/changeId.png)
 
-and let's also create a function that will handle the click event below the `$w.onReady(...)` call.
+And let's also create a function that will handle the click event below the `$w.onReady(...)` call.
 ```javascript
 function onWishlistClicked() {
   console.log('hello world');
 }
 ```
-now if you preview the website you should be able to see the `"hello world"` in the console.
+If you try to preview the website now you should be able to see the `"hello world"` in the console.
 
-The `$w` and the `ID` field are very important parts in Corvid, In fact this is the way We can interact with elements as we've seen in the example above. those of you who are familiar with `jquery` will recognize the syntax straight away and for those who aren't, the `$w` is the object that allows us to get a reference to an element in the page based on the `ID` that we give him in the `ID` field using the syntax: `$w('#<ID>')`. e.g. for `ID: AddToWishlistButton` the call: `$w('#AddToWishlistButton')` will return a reference to the "add to wishlist" button.
+The `$w` and the `ID` field are very important parts in Corvid, In fact this is the way We can interact with elements, as we've seen in the example above. To those of you who are familiar with `jquery` you will recognize the syntax straight away and for those who aren't, the `$w` is the object that allows us to get a reference to an element in the page based on the `ID` that we gaive him in the `ID` field. The syntax for `$w` is: `$w('#<ID>')`, E.g. for `ID: AddToWishlistButton` the call: `$w('#AddToWishlistButton')` will return a reference to the "add to wishlist" button.
 
-In order to insert a new item in the database we need to expose a method from the `backend` that the `client` will invoke and as a result a new item will be added to the Wishlist collection.
-In the sidebar, click the `+` when hovering over `backend` or expand it and click on `Add a new web module`. name the module `wishlist.jsw` and open it.
+In order to insert a new item into the database we need to expose a method from the `backend` that the `client` will invoke and as a result a new item will be added to the Wishlist collection.
+In the sidebar, click the `+` while hovering over `backend` or expand it and click on `Add a new web module`. Name the module `wishlist.jsw` and open it.
 
-inside it add the following code:
+Open the file and inside it add the following code:
 ```javascript
-// Import the wix-users module for working with users.
+// import the wix-users module for working with users.
 import wixUsers from 'wix-users-backend';
-// Import the wix-data module for working with queries.
+// import the wix-data module for working with queries.
 import wixData from 'wix-data';
 
 const collectionName = 'Wishlist';
@@ -106,15 +106,15 @@ export function insertWishlistItem(product) {
 	});
 }
 ```
-we've done a couple of things here. first we imported 2 modules: `wix-users-backend, wix-data`, the first is used to handle user status and in our case to check if the current user is a member or not (since only members should be able to update the table). the second is to manipulate collection data and in the above code, to add a new entry to the collection.
-> Note that although product is a reference column and you may see the name of the product in the collection view page it is actually referenced by an id, in this case the `_id` field of the product. this is the same case when we are querying the data, as you'll see soon.
+We've done a couple of things here. First we imported 2 modules: `wix-users-backend, wix-data`, the first is used to handle user status and in our case to check if the current user is a member or not (since only members should be able to update the table). The second is to manipulate collection data and in the above code, to add a new entry to the collection.
+> Note that although product is a reference column and you may see the name of the product in the collection view page it is actually referenced by an id, in this case the `_id` field of the product. This is the same case when querying the data, as you'll see soon.
 
 Now we need to call this code from the client, so let's do just that.
-add the following import at the top:
+Add the following import at the top:
 ```javascript
 import { insertWishlistItem } from 'backend/wishlist.jsw';
 ```
-and back in the product page let's replace the `onClick` handler with the following code:
+And back in the product page let's replace the `onClick` handler with the following code:
 ```javascript
 async function onWishlistClicked() {
 	// get the current product in the product page
@@ -123,13 +123,18 @@ async function onWishlistClicked() {
 	await insertWishlistItem(product);
 }
 ```
-> Notes: 
-> * make sure that the product component Id is `productPage1` or change it to yours.
-now when we click on the button a new item should be added to the collection. you can verify this by previewing the page, clicking the button and then go back to the collection and see if it's added.
-> * we can also insert to a collection directly from the client side without using a backend code, however this means that we will need to pass the `userId` to the insert method as a parameter and as a result a user maybe be able to insert Wishlist items for other memebers and we don't want to enable that...
+> Note: Make sure that the product component Id is `productPage1` or change it to yours.
+
+Now when we click on the button a new item should be added to the collection. You can verify this by previewing the page, clicking the button and then go back to the collection and see if it's added.
+> Note: We can also insert to a collection directly from the client side without using a backend code, however this means that we will need to pass the `userId` to the insert method as a parameter and as a result a user maybe be able to insert Wishlist items for other memebers and we don't want to enable that...
 
 But what about the case when our user isn't a member and he clicks the Wishlist button?
-well we can prompt him to sign up instead! let's add the code that does that:
+Well we can prompt him to sign up instead! let's add the code that does that:
+Import the required module at the top:
+```javascript
+import wixUsers from 'wix-users';
+```
+And write the code that prompts the user to sign up:
 ```javascript
 async function onWishlistClicked() {
 	// if user is not logged in, prompt him to login
@@ -144,14 +149,10 @@ async function onWishlistClicked() {
 	await insertWishlistItem(product);
 }
 ```
-and add the following import at the top:
-```javascript
-import wixUsers from 'wix-users';
-```
 
-We don't want the user to insert the same product multiple times to the Wishlist and we haven't added an option to remove it. we can solve both issues at the same time by coverting the `Add to Wishlist` button to a toggle button that will add or remove an item as necessary.
+We don't want the user to insert the same product multiple times to the Wishlist and we haven't added an option to remove it. We can solve both issues at the same time by coverting the `Add to Wishlist` button to a toggle button that will add or remove an item as necessary.
 
-In order to do that we need 2 new functions in the `backend` that will handle these calls.
+In order to do that we need 2 new functions in the `backend` to check if an item is in the Wishlist and to remove an item.
 Let's add them:
 ```javascript
 export function getItemInWishlist(productId) {
@@ -179,7 +180,7 @@ export async function removeWishlistItem(productId) {
 	return wixData.remove(collectionName, data.items[0]._id);
 }
 ```
-and now in the client we need to add the logic for the toggle button.
+And now in the client we need to add the logic for the toggle button.
 Again, let's extend the handler function:
 ```javascript
 async function onWishlistClicked() {
@@ -202,7 +203,7 @@ async function onWishlistClicked() {
 	}
 }
 ```
-and add these functions at the bottom:
+And add these functions at the bottom:
 ```javascript
 async function isProductInWishlist() {
 	const product = await $w('#productPage1').getProduct();
@@ -219,11 +220,12 @@ function showRemoveFromWishlistButton() {
 	$w('#AddToWishlistButton').label = 'Remove from wishlist';
 }
 ```
-and these imports at the top:
+And these imports at the top:
 ```javascript
 import { insertWishlistItem, getItemInWishlist, removeWishlistItem } from 'backend/wishlist.jsw';
 ```
-we also need to update the `$w.onReady(...)` to reflect the initial state:
+
+We also need to update the `$w.onReady(...)` to reflect the initial state:
 ```javascript
 $w.onReady(async function () {
 	$w('#AddToWishlistButton').onClick(onWishlistClicked);
@@ -264,20 +266,20 @@ async function onWishlistClicked() {
 	}
 }
 ```
-the `show` and `hide` functions do... exactly what you expect, they show and hide the element and the extra parameter is the animation used to show and hide the element (the full list can be found in the documentation). we also added some code to hide it after 3 seconds so it won't just hang there...
-> Note: make sure you use the correct Id for the popup.
+The `show` and `hide` functions do... exactly what you expect, they show and hide the element and the extra parameter is the animation used to show and hide the element (the full list can be found in the documentation). We also added some code to hide it after 3 seconds so it won't just hang there...
+> Note: Make sure you are using the correct Id for the popup.
 
 
 ### Time to build the Wishlist!
-so far we only created the functionality to add and remove items from the list but we still can't see it.
+So far we only created the functionality to add and remove items from the list but we still can't see it.
 For that we need to create a new page that will show the Wishlist itself.
-So, add a new page named "Wishlist" and inside it add a new item from the `Lists & Grids` section. that will be our `repeater` and we'll use that to show the Wishlist.
+So, add a new page named "Wishlist" and inside it add a new item from the `Lists & Grids` section. That will be our `repeater` and we'll use that to show the Wishlist.
 
-update the Ids in the repeater so we'll be able to use them later on.
-here's how my repeater looks like with the Ids I chose (writtend in red and `wishlistRepeater` as the Id of the repeater):
+Update the Ids in the repeater so we'll be able to use them later on.
+Here's how my repeater looks like with the Ids I chose (writtend in red and `wishlistRepeater` as the Id of the repeater):
 ![alt repeater ids](images/repeaterIds.png)
 
-first we need a way to get the items. We can do that by adding another function to our `backend` file.
+First we need a way to get the items, we can do that by adding another function to our `backend` file.
 ```javascript
 export async function getWishlistItems() {
 	const user = wixUsers.currentUser;
@@ -294,7 +296,7 @@ export async function getWishlistItems() {
 }
 ```
 
-next, let's add a `loadWishlist` function on page load.
+Next, let's add a `loadWishlist` function on page load.
 ```javascript
 // import backend functions
 import { getWishlistItems, removeWishlistItem } from 'backend/wishlist';
@@ -320,7 +322,7 @@ async function loadWishlist() {
 	repeater.show();
 }
 ```
-as you can see we get the items from the `backend` and set them as the data for the grid. but we're still missing the function that binds the data to each row item. we'll do that right now.
+As you can see we get the items from the `backend` and set them as the data for the grid, but we're still missing the function that binds the data to each row item. We'll do that right now.
 ```javascript
 function onWishlistItemReady($item, wishlistItem) {
 	// the referenced product is in the wishlist item since we included it in query
@@ -374,9 +376,9 @@ function isObjectEmpty(obj) {
 	return Object.entries(obj).length === 0 && obj.constructor === Object;
 }
 ```
-the `$item` is the element in the list that corresponds to the given `wishlistItem`, so we can use that to select any  previously defined sub-elements by the Ids we gave them and bind the data as we see fit.
+The `$item` is the element in the list that corresponds to the given `wishlistItem`, so we can use that to select any  previously defined sub-elements by the Ids we gave them and bind the data as we see fit.
 
-now we're just missing the option to remove an item from the wishlist. let's implement that:
+Now we're just missing the option to remove an item from the wishlist. let's implement that:
 ```javascript
 function onWishlistItemReady($item, wishlistItem) {
 	// same implementation as before
@@ -422,8 +424,8 @@ async function removeItemFromWishlist(productId) {
 # Congragulations!
 ![alt repeater ids](https://media.giphy.com/media/bKBM7H63PIykM/giphy.gif)
 
-if you got to here then you have a fully functional wishlist in your website!
-users should now be able to add and remove items from their Wishlist and as the site owner you can see the products in the collection and manage it as you see fit.
+If you got to here then you have a fully functional wishlist in your website!
+Users should now be able to add and remove items from their Wishlist and as the site owner you can see the products in the collection and manage it as you see fit.
 
 If you want to see how you can take this further check out the next step.
 
@@ -507,24 +509,24 @@ You can navigate to the page through the pages menu:
 ![alt repeater ids](images/navigateToDashboard.png)
 
 What we're going to do is add another repeater like before, only this time we're going to do a couple of new things:
-1. create an aggregation query to count how many users added a product them to their wishlists.
-2. bind the repeater to a dataset and use filter to show only the products that we want.
+1. Create an aggregation query to count how many users added a product them to their wishlists.
+2. Bind the repeater to a dataset and use filter to show only the products that we want.
 
 We can drop in a repeater from the `lists & grids` section and set up Ids just like we did in the Wishlist page and now instead of manually binding the columns in the data to the UI we're going to bind that data from a `dataset` object.
-first we need to create a `dataset` object:
+First we need to create a `dataset` object:
 ![alt repeater ids](images/createDataset.png)
 
-Select the `Products` collection and click `create`. now you should see a new `dataset` object on your screen:
+Select the `Products` collection and click `create`. As a result a new `dataset` object should appear on your screen:
 ![alt repeater ids](images/datasetObject.png)
 
 This object will not be displayed in your website, it's only shown in the editor so you could manage it, so you can move it anywhere you want on the screen without affecting your website.
-Now that we have a `dataset` we can bind it's columns to elements in the UI. let's bind the name of the product to a text element. Select the text element you want to connect and click on the "connect to data" button, then select the "Stores/Products dataset" in the as the dataset to connect and in the "Text connects to" select the `Name` field.
+Now that we have a `dataset` we can bind it's columns to elements in the UI. Let's bind the name of the product to a text element. Select the text element you want to connect and click on the "connect to data" button, then select the "Stores/Products dataset" in the as the dataset to connect and in the "Text connects to" select the `Name` field.
 ![alt repeater ids](images/connectText.png)
 
-Now if you try to preview the your website you should see that the repeater shows the products in your store with their corresponding names. you can connect the rest of the items in the repeater just like the text so they'll be displayed in the list.
+Now if you try to preview the your website you should see that the repeater shows the products in your store with their corresponding names. You can connect the rest of the items in the repeater just like the text so they'll be displayed in the list.
 
 Meanwhile, i'll skip ahead to show you how to also display the amount of items (that's what we're here for after all!).
-we're going to need a query to get the data that we want. We already know by now that the right place to put queries is in the `backend` section and we can add a function in our already existing file:
+We're going to need a query to get the data that we want. We already know by now that the right place to put queries is in the `backend` section and we can add a function in our already existing file:
 ```javascript
 // previously defined imports
 // ...
@@ -568,11 +570,11 @@ async function loadWishlist() {
 }
 ```
 
-Let's analyze this code. first we're importing the `getMostWishedForItems` from the backend so we'll be able to retrieve the "count" of the products. next we're defining a `data` variable where we're going to store the result of that query so we'll be able to use it in `onWishlistItemReady` (we can't pass it directly, since the `onWishlistItemReady` is called for us when the item is ready and we can't pass the result of `getMostWishedForItems` to it).
+Let's analyze this code. first we're importing the `getMostWishedForItems` from the backend so we'll be able to retrieve the "count" of the products. Next we're defining a `data` variable where we're going to store the result of that query so we'll be able to use it in `onWishlistItemReady` (we can't pass it directly, since the `onWishlistItemReady` is called for us when the item is ready and we can't pass the result of `getMostWishedForItems` to it).
 Just like before we're adding a handler function for `onItemReady`, since this method is called whenever the repeater needs to render an item it will also be called when the data from the `dataset` needs to be rendered.
 
-in the `onWishlistItemReady` we're searching the aggregated data for the product with the same id as the currently rendered item to get it's count amount. if we find an item then we show it's count value and in case we don't we'll just show 0.
-> Note: the aggregated result doesn't return products with `0` count, since it only aggregates on products that exist in the Wishlist table and `0` count means that no product was found in the Wishlist table.
+In the `onWishlistItemReady` we're searching the aggregated data for the product with the same id as the currently rendered item to get it's count amount. If we find an item then we show it's count value and in case we don't we'll just show 0.
+> Note: The aggregated result doesn't return products with `0` count, since it only aggregates on products that exist in the Wishlist table and `0` count means that no product was found in the Wishlist table.
 
 At this point we already have a working dashboard page that shows the count of products, but i'd like to do one more thing and that is to filter out the items that don't appear in any Wishlist (0 count items).
 
@@ -597,15 +599,15 @@ async function loadWishlist() {
 }
 ```
 What we did here is add a filter to the `dataset` object that shows only products with `_id` that is present the array of ids (`productIds`) that we supplied it. The result is a Wishlist that displays only products that have a `count > 0`, just like we wanted!
-> Note: at this point we can replace this line of code: `const itemCount = matchingItem ? matchingItem.count.toString() : '0';` with this: `const itemCount = matchingItem.count.toString();` since there will always be a match (we made sure of that in the filter), but we can also just keep this as it is.
-> Note: the `count` property is a `number` and we're converting it to a string, since `Text` elements must recieve a string in their `text` property.
+> Note: At this point we can replace this line of code: `const itemCount = matchingItem ? matchingItem.count.toString() : '0';` with this: `const itemCount = matchingItem.count.toString();` since there will always be a match (we made sure of that in the filter), but we can also just keep this as it is.
+> Note: The `count` property is a `number` and we're converting it to a string, since `Text` elements must recieve a string in their `text` property.
 
-That's it! hope you liked it and learned some new on the way :)
+That's it! hope you liked it and learned something new along the way :)
 
 ![alt repeater ids](https://media.giphy.com/media/V2ZrZfHghzSNi/giphy.gif)
 
 
-## additional info
+## Additional info
 * You can find a working example site [here](https://oripi3.wixsite.com/wishlisttest/wishlist).
 * A link to corvid api can be found [here](https://www.wix.com/corvid/reference).
 * Lodash documentation can be found [here](https://lodash.com/docs)
