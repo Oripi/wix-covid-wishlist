@@ -9,7 +9,7 @@ we'll learn how to:
 * Use some of the various libraries that Corvid exposes to us for manipulating our website.
 * Create our own database table and use CRUD (Create, Read, Update, Delete) operations on it.
 
-# So let's get started!
+# 1. So let's get started!
 The first thing we need is... a website! so let's start by creating a new website where we can try our code. Since we're creating a Wishlist for an online store, select the "online-store" option when creating a new website. In case you created a different kind of website you can always enable it through the same menu that you add different elements to your website, just under the `store` section.
 
 Now, let's enable Corvid so we'll be able to modify what we need:
@@ -25,7 +25,7 @@ If you wanna be really fancy you can also add a popup that will show once an ite
 We'll manipulate it later to show and hide with animations.
 Make sure to hide it on page load (this can be done by right clicking on the element, selecting the `View Properties` window from the menu and checking the `Hidden on Load` option).
 
-
+## 2. Adding a Database
 We're going to need a database to store our Wishlist data, so let's create one.
 In the sidebar under `Database` click the `Add a new collection` link and select the `start from scratch` option.
 Name the collection `Wishlist` and in permissions select `Member-generated content` so only members will be able to add and remove items from Wishlists.
@@ -40,6 +40,7 @@ When creating the columns, select following types:
 * AddedDate - Date and Time
 In case you made a mistake in the column creation you can edit it via the settings of the column. You may get a warning message, but that's ok because we haven't used the table yet.
 
+## 3. Trying some client code
 Finally it's time to write some code!
 
 Select the Product page and open up the dev console by clicking on it in the lower part of the page:
@@ -75,6 +76,7 @@ If you try to preview the website now you should be able to see the `"hello worl
 
 The `$w` and the `ID` field are very important parts in Corvid, In fact this is the way We can interact with elements, as we've seen in the example above. To those of you who are familiar with `jquery` you will recognize the syntax straight away and for those who aren't, the `$w` is the object that allows us to get a reference to an element in the page based on the `ID` that we gaive him in the `ID` field. The syntax for `$w` is: `$w('#<ID>')`, E.g. for `ID: AddToWishlistButton` the call: `$w('#AddToWishlistButton')` will return a reference to the "add to wishlist" button.
 
+## 4. Adding Database queries
 In order to insert a new item into the database we need to expose a method from the `backend` that the `client` will invoke and as a result a new item will be added to the Wishlist collection.
 In the sidebar, click the `+` while hovering over `backend` or expand it and click on `Add a new web module`. Name the module `wishlist.jsw` and open it.
 
@@ -109,6 +111,7 @@ export function insertWishlistItem(product) {
 We've done a couple of things here. First we imported 2 modules: `wix-users-backend, wix-data`, the first is used to handle user status and in our case to check if the current user is a member or not (since only members should be able to update the table). The second is to manipulate collection data and in the above code, to add a new entry to the collection.
 > Note that although product is a reference column and you may see the name of the product in the collection view page it is actually referenced by an id, in this case the `_id` field of the product. This is the same case when querying the data, as you'll see soon.
 
+## 5. Calling our Backend Code From the Client
 Now we need to call this code from the client, so let's do just that.
 Add the following import at the top:
 ```javascript
@@ -150,6 +153,7 @@ async function onWishlistClicked() {
 }
 ```
 
+## 6. Setting up the Toggle Button
 We don't want the user to insert the same product multiple times to the Wishlist and we haven't added an option to remove it. We can solve both issues at the same time by coverting the `Add to Wishlist` button to a toggle button that will add or remove an item as necessary.
 
 In order to do that we need 2 new functions in the `backend` to check if an item is in the Wishlist and to remove an item.
@@ -270,7 +274,7 @@ The `show` and `hide` functions do... exactly what you expect, they show and hid
 > Note: Make sure you are using the correct Id for the popup.
 
 
-### Time to build the Wishlist!
+### 7. Time to Show the Wishlist!
 So far we only created the functionality to add and remove items from the list but we still can't see it.
 For that we need to create a new page that will show the Wishlist itself.
 So, add a new page named "Wishlist" and inside it add a new item from the `Lists & Grids` section. That will be our `repeater` and we'll use that to show the Wishlist.
@@ -429,7 +433,7 @@ Users should now be able to add and remove items from their Wishlist and as the 
 
 If you want to see how you can take this further check out the next step.
 
-# Something Extra
+# 8. Something Extra
 So we have a fully functioning Wishlist, but I bet that with a little more effort we can improve it by a lot!
 
 First things first, let's add some indications to a non-member user when he navigates to the Wishlist.
@@ -497,6 +501,7 @@ async function loadWishlist() {
 ```
 And now the user won't see a blank page when he has nothing in his Wishlist.
 
+## 9. Creating a Dashboard page
 So we tweaked some thing to make our site more attractive to users but we haven't seen something new yet and this is the **EXTRA** part after all...
 
 And that's why I want to show you how to create a custom page in your dashboard to show you which products your customers want the most! this could give you a real advantage is managing your online store.
@@ -508,6 +513,7 @@ I named mine `Most Wished for products` so I could easily find it in the dashboa
 You can navigate to the page through the pages menu:
 ![alt repeater ids](images/navigateToDashboard.png)
 
+## 10. Using Bindings with Repeater
 What we're going to do is add another repeater like before, only this time we're going to do a couple of new things:
 1. Create an aggregation query to count how many users added a product them to their wishlists.
 2. Bind the repeater to a dataset and use filter to show only the products that we want.
@@ -519,13 +525,17 @@ First we need to create a `dataset` object:
 Select the `Products` collection and click `create`. As a result a new `dataset` object should appear on your screen:
 ![alt repeater ids](images/datasetObject.png)
 
-This object will not be displayed in your website, it's only shown in the editor so you could manage it, so you can move it anywhere you want on the screen without affecting your website.
+This object will not be displayed in your website, it's only shown in the editor so you could manage it, so you can move it (almost) anywhere you want on the screen without affecting your website.
+
+> Note: Do not place the `dataset` in the header/footer of the page, since it will cause the `dataset` to fetch initial items on all the pages, causing your website to load more slowly. 
+
 Now that we have a `dataset` we can bind it's columns to elements in the UI. Let's bind the name of the product to a text element. Select the text element you want to connect and click on the "connect to data" button, then select the "Stores/Products dataset" in the as the dataset to connect and in the "Text connects to" select the `Name` field.
 ![alt repeater ids](images/connectText.png)
 
-Now if you try to preview the your website you should see that the repeater shows the products in your store with their corresponding names. You can connect the rest of the items in the repeater just like the text so they'll be displayed in the list.
+Now if you try to preview your website you should see that the repeater shows the products in your store with their corresponding names. You can connect the rest of the items in the repeater just like the text so they'll be displayed in the list.
 
-Meanwhile, i'll skip ahead to show you how to also display the amount of items (that's what we're here for after all!).
+## 11. Getting the Count per Product
+Next I want to show you how to display the amount of items (that's what we're here for after all!).
 We're going to need a query to get the data that we want. We already know by now that the right place to put queries is in the `backend` section and we can add a function in our already existing file:
 ```javascript
 // previously defined imports
@@ -576,6 +586,7 @@ Just like before we're adding a handler function for `onItemReady`, since this m
 In the `onWishlistItemReady` we're searching the aggregated data for the product with the same id as the currently rendered item to get it's count amount. If we find an item then we show it's count value and in case we don't we'll just show 0.
 > Note: The aggregated result doesn't return products with `0` count, since it only aggregates on products that exist in the Wishlist table and `0` count means that no product was found in the Wishlist table.
 
+## 12. Filtering Items from a Dataset
 At this point we already have a working dashboard page that shows the count of products, but i'd like to do one more thing and that is to filter out the items that don't appear in any Wishlist (0 count items).
 
 To do that we need to add a `filter` to our `dataset`:
