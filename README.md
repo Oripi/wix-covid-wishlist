@@ -6,7 +6,7 @@ In this walkthrough we're going to create our very own Wishlist for a wix websit
 
 we'll learn how to:
 * Interact with page elements through Corvid.
-* Use some of the various libraries that Corvid exposes to us to manipulate our website.
+* Use some of the various libraries that Corvid exposes to manipulate our website.
 * Create our own database table and use CRUD (Create, Read, Update, Delete) operations on it.
 
 # so let's get started!
@@ -35,13 +35,13 @@ now we're going to need to add columns to the table to store the `UserId, Produc
 
 when creating the columns, set thier type as follows:
 * UserId - Text
-* Product - Reference - column that is referenced to the products table
+* Product - Reference (this column will reference the products table)
 * AddedDate - Date and Time
 in case you made a mistake in the column creation you can edit it via the settings of the column. You may get a warning message, but that's ok because we haven't used the table yet.
 
 Finally it's time to write some code!
 
-Select the Product Page andand open up the dev console by clicking on it in the lower part of the page:
+Select the Product Page and open up the dev console by clicking on it in the lower part of the page:
 ![alt wishlist popup](images/devConsole.png)
 you should see the default code:
 ```javascript
