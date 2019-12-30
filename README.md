@@ -10,7 +10,10 @@ we'll learn how to:
 * Create our own database table and use CRUD (Create, Read, Update, Delete) operations on it.
 
 # 1. So let's get started!
-The first thing we need is... a website! so let's start by creating a new website where we can try our code. Since we're creating a Wishlist for an online store, select the "online-store" option when creating a new website. In case you created a different kind of website you can always enable it through the same menu that you add different elements to your website, just under the `store` section.
+The first thing we need is... a website! so let's start by creating a new website where we can try our code. 
+Head over to [wix](https://www.wix.com) and Since we're creating a Wishlist for an online store, select the "online-store" option when creating a new website. 
+Then, select the Editor (`Choose a template`) and select any template to your liking.
+> Note: In case you created a different kind of website you can always enable it through the same menu that you add different elements to your website, just under the `store` section.
 
 Now, let's enable Corvid so we'll be able to modify what we need:
 ![alt enable corvid](images/enableCorvid.png)
@@ -18,10 +21,13 @@ Now, let's enable Corvid so we'll be able to modify what we need:
 Next, let's go to "Product Page" and create an `Add to wishlist` button.
 ![alt wishlist button](images/addToWishlistButton.png)
 
+You can add an icon from components menu under: `Shape -> Basic Shapes`. Make sure you add 2 icons, one icon will be displayed when the item is in the wishlist and the other will be displayed when the item is not in the wishlist. Design them however you like (I used a yellow theme for border and filling, because yellow is my favourite color :blush:) and place them one of top of the other (the order) doesn't matter.
+
 ### Bonus:
 If you wanna be really fancy you can also add a popup that will show once an item has been added to wishlist:
 ![alt wishlist popup](images/addToWishlistPopup.png)
 
+You can add the popup as a `Basic Shape` from the menu and a `Text` element that shows information to our user.
 We'll manipulate it later to show and hide with animations.
 Make sure to hide it on page load (this can be done by right clicking on the element, selecting the `View Properties` window from the menu and checking the `Hidden on Load` option).
 
@@ -29,8 +35,12 @@ Make sure to hide it on page load (this can be done by right clicking on the ele
 We're going to need a database to store our Wishlist data, so let's create one.
 In the sidebar under `Database` click the `Add a new collection` link and select the `start from scratch` option.
 Name the collection `Wishlist` and in permissions select `Member-generated content` so only members will be able to add and remove items from Wishlists.
-> After creating the database save the site and refresh the page in order to see native collections, such as `Products` table.
+> In order to see the collections you need to Save and refresh the page.
 
+If you click the collection you will should see these columns:
+![default database](images/defaultCollection.png)
+
+You can ignore the `Title` column, since we're not going to use it.
 Now we're going to need to add columns to the table to store the `UserId, Product, AddedDate` and any other column that you want your users to fill that can be used later on.
 > Do not modify the `Field key` of the column, the `Field key` is generated automatically based on the `Field name` and we're going to use it later to query and display the data. for example the column `UserId` should have a `Field name` named `userId`.
 
@@ -38,7 +48,7 @@ When creating the columns, select following types:
 * UserId - Text
 * Product - Reference - with a reference to the products table (single reference)
 * AddedDate - Date and Time
-In case you made a mistake in the column creation you can edit it via the settings of the column. You may get a warning message, but that's ok because we haven't used the table yet.
+> In case you made a mistake in the column creation you can edit it via the settings of the column. You may get a warning message, but that's ok because we haven't used the table yet.
 
 ## 3. Trying some client code
 Finally it's time to write some code!
@@ -72,15 +82,17 @@ function onWishlistClicked() {
   console.log('hello world');
 }
 ```
-If you try to preview the website now you should be able to see the `"hello world"` in the console.
+If you try to preview the website now you should be able to see the "hello world" in the console after clicking the button.
 
 The `$w` and the `ID` field are very important parts in Corvid, In fact this is the way We can interact with elements, as we've seen in the example above. To those of you who are familiar with `jquery` you will recognize the syntax straight away and for those who aren't, the `$w` is the object that allows us to get a reference to an element in the page based on the `ID` that we gaive him in the `ID` field. The syntax for `$w` is: `$w('#<ID>')`, E.g. for `ID: AddToWishlistButton` the call: `$w('#AddToWishlistButton')` will return a reference to the "add to wishlist" button.
+
+While we're here let's also give `IDs` to the star icons, in order to show and hide them later. Set the `ID` of icon that is shown to the user when we want to add to the wishlist (the one with no filling) as `addToWishlistIcon` and the other icon as `removeFromWishlistIcon`.
 
 ## 4. Adding Database queries
 In order to insert a new item into the database we need to expose a method from the `backend` that the `client` will invoke and as a result a new item will be added to the Wishlist collection.
 In the sidebar, click the `+` while hovering over `backend` or expand it and click on `Add a new web module`. Name the module `wishlist.jsw` and open it.
 
-Open the file and inside it add the following code:
+Open the file and replace the content with the following code:
 ```javascript
 // import the wix-users module for working with users.
 import wixUsers from 'wix-users-backend';
@@ -217,10 +229,14 @@ async function isProductInWishlist() {
 }
 
 function showAddToWishlistButton() {
+	$w('#addToWishlistIcon').show();
+	$w('#removeFromWishlistIcon').hide();
 	$w('#AddToWishlistButton').label = 'Add to wishlist!';
 }
 
 function showRemoveFromWishlistButton() {
+	$w('#removeFromWishlistIcon').show();
+	$w('#addToWishlistIcon').hide();
 	$w('#AddToWishlistButton').label = 'Remove from wishlist';
 }
 ```
