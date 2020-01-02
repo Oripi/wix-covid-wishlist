@@ -416,9 +416,11 @@ Now we're just missing the option to remove an item from the wishlist. let's imp
 function onWishlistItemReady($item, wishlistItem) {
 	updateWishlistItem($item, wishlistItem);
 	
+	// ------------ ADDED THESE LINES -------------------
 	$item('#wishlistRemoveButton').onClick(async () => {
 		await removeItemFromWishlist(product._id);
 	});
+	// ------------ END -------------------
 	
 	updateWishlistItemAddToCartButton($item, wishlistItem);
 }
