@@ -345,6 +345,12 @@ async function loadWishlist() {
 As you can see we get the items from the `backend` and set them as the data for the grid, but we're still missing the function that binds the data to each row item. We'll do that right now.
 ```javascript
 function onWishlistItemReady($item, wishlistItem) {
+	updateWishlistItem($item, wishlistItem);
+	updateWishlistItemAddToCartButton($item, wishlistItem);
+}
+
+// update the properties
+function updateWishlistItem($item, wishlistItem) {
 	// the referenced product is in the wishlist item since we included it in query
 	const product = wishlistItem.product;
 	
@@ -353,24 +359,31 @@ function onWishlistItemReady($item, wishlistItem) {
 	
 	// let's add a click event to navigate to the product page when clicking on image
 	$item('#wishlistImage').onClick(() => {
+		// Navigate to the wishlist item's product page.
 		// this is using wixLocation module to Navigate to the item's product page
 		wixLocation.to(product.productPageUrl);
 	});
+	
 	$item('#wishlistProductName').text = product.name;
 	$item('#wishlistDescription').text = product.description;
 	
 	// here we're converting the 'added date' to a readable format
 	$item('#wishlistAddedDate').text = wishlistItem.addedDate.toLocaleString();
+}
+
+function updateWishlistItemAddToCartButton($item, wishlistItem) {
+	const product = wishlistItem.product;
 	
 	// if item is not in stock we shouldn't enable the button (assuming it's disabled by default)
 	if (product.inStock) {
 		$item('#wishlistAddToCart').enable();
 		
 		// for products that have variants we need to send the user to product page to select one
-		// otherwise we can immediately add item to cart		
+		// otherwise we can immediately add item to cart
 		const hasVariants = !isObjectEmpty(product.productOptions)
 		
 		if (hasVariants) {
+		
 			// set the button text to explain action
 			$item('#wishlistAddToCart').label = 'Select variants';
 			
@@ -379,8 +392,8 @@ function onWishlistItemReady($item, wishlistItem) {
 				// Navigate to the wishlist item's product page.
 				wixLocation.to(product.productPageUrl);
 			});
+		// otherwise we can add it to cart
 		} else {
-			// otherwise we can add it to cart
 			$item('#wishlistAddToCart').label = 'Add to cart';
 			$item('#wishlistAddToCart').onClick(async () => {
 				// in order to add to cart we have to use the cart icon
@@ -401,28 +414,30 @@ The `$item` is the element in the list that corresponds to the given `wishlistIt
 Now we're just missing the option to remove an item from the wishlist. let's implement that:
 ```javascript
 function onWishlistItemReady($item, wishlistItem) {
-	// same implementation as before
-	//...
+	updateWishlistItem($item, wishlistItem);
 	
-	// here we're converting the 'added date' to a readable format
-	$item('#wishlistAddedDate').text = wishlistItem.addedDate.toLocaleString();
-	
-	// ------------ ADDED THESE LINES -------------------
 	$item('#wishlistRemoveButton').onClick(async () => {
 		await removeItemFromWishlist(product._id);
 	});
-	// ------------ END -------------------
 	
-	// if item is not in stock we shouldn't enable the button (assuming it's disabled by default)
+	updateWishlistItemAddToCartButton($item, wishlistItem);
+}
+
+function updateWishlistItemAddToCartButton($item, wishlistItem) {
+	const product = wishlistItem.productId;
 	if (product.inStock) {
-		// nothing changed here
-		// ...
+		$item('#wishlistAddToCart').enable();
+		if (!isObjectEmpty(product.productOptions)) {
+			$item('#wishlistAddToCart').label = 'Select variants';
+			$item('#wishlistAddToCart').onClick(() => {
+				// Navigate to the wishlist item's product page.
+				wixLocation.to(product.productPageUrl);
+			});
 		} else {
-			// otherwise we can add it to cart
 			$item('#wishlistAddToCart').label = 'Add to cart';
 			$item('#wishlistAddToCart').onClick(async () => {
-				// in order to add to cart we have to use the cart icon
-				// in case you don't want to show one in this page you can add an icon and hide it
+				// Navigate to the wishlist item's product page.
+				await $item('#shoppingCartIcon1').addToCart(product._id);
 				await $item('#shoppingCartIcon1').addToCart(product._id);
 				// ------------ ADDED THESE LINES -------------------
 				await removeItemFromWishlist(product._id);
