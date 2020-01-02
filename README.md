@@ -414,14 +414,13 @@ The `$item` is the element in the list that corresponds to the given `wishlistIt
 Now we're just missing the option to remove an item from the wishlist. let's implement that:
 ```javascript
 function onWishlistItemReady($item, wishlistItem) {
-	updateWishlistItem($item, wishlistItem);
-	
 	// ------------ ADDED THESE LINES -------------------
 	$item('#wishlistRemoveButton').onClick(async () => {
 		await removeItemFromWishlist(product._id);
 	});
 	// ------------ END -------------------
 	
+	updateWishlistItem($item, wishlistItem);
 	updateWishlistItemAddToCartButton($item, wishlistItem);
 }
 
