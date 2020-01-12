@@ -415,6 +415,8 @@ Now we're just missing the option to remove an item from the wishlist. let's imp
 ```javascript
 function onWishlistItemReady($item, wishlistItem) {
 	// ------------ ADDED THESE LINES -------------------
+	const product = wishlistItem.product;
+	
 	$item('#wishlistRemoveButton').onClick(async () => {
 		await removeItemFromWishlist(product._id);
 	});
@@ -438,7 +440,6 @@ function updateWishlistItemAddToCartButton($item, wishlistItem) {
 			$item('#wishlistAddToCart').label = 'Add to cart';
 			$item('#wishlistAddToCart').onClick(async () => {
 				// Navigate to the wishlist item's product page.
-				await $item('#shoppingCartIcon1').addToCart(product._id);
 				await $item('#shoppingCartIcon1').addToCart(product._id);
 				// ------------ ADDED THESE LINES -------------------
 				await removeItemFromWishlist(product._id);
