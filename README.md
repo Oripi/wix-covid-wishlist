@@ -471,8 +471,22 @@ So we have a fully functioning Wishlist, but I bet that with a little more effor
 First things first, let's add some indications to a non-member user when he navigates to the Wishlist.
 ![alt repeater ids](images/wishlistUserNotMember.png)
 > Note that we're hiding it by default. we'll show it only if the user is not a member.
-To do that we can add a condition for user membership in the `loadWishlist` function:
+To do that we can add a condition for user membership in the `loadWishlist` function.
+First let's add some `backend` code:
 ```javascript
+// Import the wix-users module for working with users.
+import wixUsers from 'wix-users-backend';
+
+export function isUserLoggedIn() {
+	return wixUsers.currentUser.loggedIn;
+}
+```
+
+And in the `Wishlist` page:
+```javascript
+// add the isUserLoggedIn from backend
+import { getWishlistItems, removeWishlistItem, isUserLoggedIn } from 'backend/wishlist';
+
 async function loadWishlist() {
 	// ------------ ADDED THESE LINES -------------------
 	// check if user is a member
