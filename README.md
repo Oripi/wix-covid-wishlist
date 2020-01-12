@@ -425,7 +425,7 @@ function onWishlistItemReady($item, wishlistItem) {
 }
 
 function updateWishlistItemAddToCartButton($item, wishlistItem) {
-	const product = wishlistItem.productId;
+	const product = wishlistItem.product;
 	if (product.inStock) {
 		$item('#wishlistAddToCart').enable();
 		if (!isObjectEmpty(product.productOptions)) {
