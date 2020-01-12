@@ -472,6 +472,7 @@ First things first, let's add some indications to a non-member user when he navi
 ![alt repeater ids](images/wishlistUserNotMember.png)
 > Note that we're hiding it by default. we'll show it only if the user is not a member.
 To do that we can add a condition for user membership in the `loadWishlist` function.
+
 First let's add some `backend` code:
 ```javascript
 // Import the wix-users module for working with users.
