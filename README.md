@@ -1,4 +1,4 @@
-# wix-covid-wishlist
+# wix-corvid-wishlist
 Getting started with Wix Corvid
 
 # What does this walkthrough offer?
